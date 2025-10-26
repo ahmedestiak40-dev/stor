@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Estiak Stopwatch</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
+            background-size: 400% 400%;
+            animation: gradient 15s ease infinite;
+            padding: 20px;
+            transition: background 1s ease;
+            touch-action: manipulation;
+        }
+
+        @keyframes gradient {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .stopwatch-container {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(15px);
+            border-radius: 25px;
+            padding: 30px 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            color: white;
+            width: 100%;
+            max-width: 500px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stopwatch-container::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 70%);
+            z-index: -1;
+        }
+
+        h1 {
+            margin-bottom: 20px;
+            font-weight: 700;
+            font-size: 2.2rem;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+            background: linear-gradient(to right, #ff9a9e, #fad0c4, #fad0c4, #a1c4fd);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .time-display {
+            font-size: 4rem;
+            font-weight: 300;
+            margin: 20px 0;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+            letter-spacing: 2px;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px 15px;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .time-unit {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .time-label {
+            font-size: 0.8rem;
+            opacity: 0.8;
+            margin-top: 5px;
+        }
+
+        .progress-ring {
+            position: relative;
+            width: 100px;
+            height: 100px;
+            margin: 15px auto;
+        }
+
+        .progress-ring-circle {
+            transform: rotate(-90deg);
+            transform-origin: 50% 50%;
+        }
+
+        .progress-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 1rem;
+            font-weight: bold;
+        }
+
+        .controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin: 25px 0;
+        }
+
+        button {
+            padding: 18px 15px;
+            font-size: 1.1rem;
+            border: none;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-weight: 600;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            min-height: 80px;
+        }
+
+        button:active {
+            transform: scale(0.95);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        #startBtn {
+            background: linear-gradient(135deg, #4CAF50, #2E7D32);
+            color: white;
+        }
+
+        #pauseBtn {
+            background: linear-gradient(135deg, #ff9800, #EF6C00);
+            color: white;
+        }
+
+        #resetBtn {
+            background: linear-gradient(135deg, #f44336, #C62828);
+            color: white;
+        }
+
+        #themeBtn {
+            background: linear-gradient(135deg, #9C27B0, #6A1B9A);
+            color: white;
+        }
+
+        .button-text {
+            font-size: 1rem;
+        }
+
+        .button-icon {
+            font-size: 1.5rem;
+        }
+
+        .footer {
+            margin-top: 20px;
+            font-size: 0.8rem;
+            opacity: 0.7;
+            text-align: center;
+        }
+
+        .shortcuts {
+            display: none;
+        }
+
+        /* Mobile-specific optimizations */
+        @media (max-width: 480px) {
+            .stopwatch-container {
+                padding: 20px 15px;
+                border-radius: 20px;
+            }
+
+            h1 {
+                font-size: 1.8rem;
+                margin-bottom: 15px;
+            }
+
+            .time-display {
+                font-size: 3.2rem;
+                padding: 15px 10px;
+                margin: 15px 0;
+                flex-wrap: wrap;
+                gap: 5px;
+            }
+
+            .time-label {
+                font-size: 0.7rem;
+            }
+
+            .progress-ring {
+                width: 80px;
+                height: 80px;
+                margin: 10px auto;
+            }
+
+            .progress-text {
+                font-size: 0.9rem;
+            }
+
+            .controls {
+                grid-template-columns: 1fr;
+                gap: 12px;
+                margin: 20px 0;
+            }
+
+            button {
+                padding: 16px 12px;
+                min-height: 70px;
+                border-radius: 12px;
+                flex-direction: row;
+                justify-content: flex-start;
+            }
+
+            .button-text {
+                font-size: 1.1rem;
+            }
+
+            .button-icon {
+                font-size: 1.3rem;
+                margin-right: 10px;
+            }
+        }
+
+        /* Landscape orientation support */
+        @media (max-height: 500px) and (orientation: landscape) {
+            body {
+                padding: 10px;
+            }
+            
+            .stopwatch-container {
+                padding: 15px;
+                max-width: 90%;
+            }
+            
+            h1 {
+                font-size: 1.5rem;
+                margin-bottom: 10px;
+            }
+            
+            .time-display {
+                font-size: 2.5rem;
+                margin: 10px 0;
+                padding: 10px;
+            }
+            
+            .progress-ring {
+                display: none;
+            }
+            
+            .controls {
+                grid-template-columns: repeat(4, 1fr);
+                gap: 10px;
+                margin: 15px 0;
+            }
+            
+            button {
+                min-height: 60px;
+                padding: 10px;
+            }
+        }
+
+        /* Prevent zoom on double-tap */
+        @media (hover: none) and (pointer: coarse) {
+            button {
+                -webkit-tap-highlight-color: rgba(0,0,0,0.1);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="stopwatch-container">
+        <h1><i class="fas fa-stopwatch"></i> Estiak Stopwatch</h1>
+        
+        <div class="progress-ring">
+            <svg width="100" height="100" viewBox="0 0 100 100">
+                <circle class="progress-ring-circle" 
+                        stroke="rgba(255, 255, 255, 0.3)" 
+                        stroke-width="6" 
+                        fill="transparent" 
+                        r="42" 
+                        cx="50" 
+                        cy="50"/>
+                <circle class="progress-ring-circle" 
+                        id="progressCircle"
+                        stroke="#4CAF50" 
+                        stroke-width="6" 
+                        fill="transparent" 
+                        r="42" 
+                        cx="50" 
+                        cy="50"
+                        stroke-dasharray="263.9"
+                        stroke-dashoffset="263.9"/>
+            </svg>
+            <div class="progress-text" id="progressText">0%</div>
+        </div>
+        
+        <div class="time-display">
+            <div class="time-unit">
+                <span id="minutes">00</span>
+                <div class="time-label">MIN</div>
+            </div>
+            <div>:</div>
+            <div class="time-unit">
+                <span id="seconds">00</span>
+                <div class="time-label">SEC</div>
+            </div>
+            <div>.</div>
+            <div class="time-unit">
+                <span id="milliseconds">00</span>
+                <div class="time-label">MS</div>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <button id="startBtn">
+                <i class="fas fa-play button-icon"></i>
+                <span class="button-text">Start</span>
+            </button>
+            <button id="pauseBtn">
+                <i class="fas fa-pause button-icon"></i>
+                <span class="button-text">Pause</span>
+            </button>
+            <button id="resetBtn">
+                <i class="fas fa-redo button-icon"></i>
+                <span class="button-text">Reset</span>
+            </button>
+            <button id="themeBtn">
+                <i class="fas fa-palette button-icon"></i>
+                <span class="button-text">Theme</span>
+            </button>
+        </div>
+        
+        <div class="footer">
+            <p>Tap buttons to control the stopwatch</p>
+            <p>Double-tap time display to toggle fullscreen</p>
+        </div>
+    </div>
+
+    <script>
+        // Stopwatch variables
+        let startTime;
+        let elapsedTime = 0;
+        let timerInterval;
+        let isRunning = false;
+        let currentTheme = 0;
+        const themes = [
+            { bg: 'linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d)', text: 'white' },
+            { bg: 'linear-gradient(135deg, #667eea, #764ba2)', text: 'white' },
+            { bg: 'linear-gradient(135deg, #f093fb, #f5576c)', text: 'white' },
+            { bg: 'linear-gradient(135deg, #4facfe, #00f2fe)', text: 'white' },
+            { bg: 'linear-gradient(135deg, #43e97b, #38f9d7)', text: 'black' },
+            { bg: 'linear-gradient(135deg, #fa709a, #fee140)', text: 'black' }
+        ];
+
+        // DOM elements
+        const minutesDisplay = document.getElementById('minutes');
+        const secondsDisplay = document.getElementById('seconds');
+        const millisecondsDisplay = document.getElementById('milliseconds');
+        const startBtn = document.getElementById('startBtn');
+        const pauseBtn = document.getElementById('pauseBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const themeBtn = document.getElementById('themeBtn');
+        const progressCircle = document.getElementById('progressCircle');
+        const progressText = document.getElementById('progressText');
+
+        // Initialize
+        updateProgressRing();
+
+        // Timer functions
+        function startTimer() {
+            if (!isRunning) {
+                startTime = Date.now() - elapsedTime;
+                timerInterval = setInterval(updateTime, 10);
+                isRunning = true;
+                startBtn.innerHTML = '<i class="fas fa-play button-icon"></i><span class="button-text">Resume</span>';
+                updateProgressRing();
+                
+                // Vibration feedback on mobile
+                if (navigator.vibrate) {
+                    navigator.vibrate(50);
+                }
+            }
+        }
+
+        function pauseTimer() {
+            if (isRunning) {
+                clearInterval(timerInterval);
+                isRunning = false;
+                updateProgressRing();
+                
+                // Vibration feedback on mobile
+                if (navigator.vibrate) {
+                    navigator.vibrate([30, 50, 30]);
+                }
+            }
+        }
+
+        function resetTimer() {
+            clearInterval(timerInterval);
+            isRunning = false;
+            elapsedTime = 0;
+            updateDisplay();
+            startBtn.innerHTML = '<i class="fas fa-play button-icon"></i><span class="button-text">Start</span>';
+            updateProgressRing();
+            
+            // Vibration feedback on mobile
+            if (navigator.vibrate) {
+                navigator.vibrate(100);
+            }
+        }
+
+        function updateTime() {
+            elapsedTime = Date.now() - startTime;
+            updateDisplay();
+            updateProgressRing();
+        }
+
+        function updateDisplay() {
+            const milliseconds = Math.floor((elapsedTime % 1000) / 10);
+            const seconds = Math.floor((elapsedTime / 1000) % 60);
+            const minutes = Math.floor((elapsedTime / (1000 * 60)) % 60);
+
+            millisecondsDisplay.textContent = milliseconds.toString().padStart(2, '0');
+            secondsDisplay.textContent = seconds.toString().padStart(2, '0');
+            minutesDisplay.textContent = minutes.toString().padStart(2, '0');
+        }
+
+        function updateProgressRing() {
+            // Update progress based on seconds (60 second cycle)
+            const seconds = Math.floor((elapsedTime / 1000) % 60);
+            const progress = (seconds / 60) * 100;
+            const circumference = 263.9; // 2 * π * r (r=42)
+            const offset = circumference - (progress / 100) * circumference;
+            
+            progressCircle.style.strokeDashoffset = offset;
+            progressText.textContent = `${Math.round(progress)}%`;
+            
+            // Change progress color based on progress
+            if (progress < 25) {
+                progressCircle.style.stroke = '#4CAF50';
+            } else if (progress < 50) {
+                progressCircle.style.stroke = '#FFC107';
+            } else if (progress < 75) {
+                progressCircle.style.stroke = '#FF9800';
+            } else {
+                progressCircle.style.stroke = '#F44336';
+            }
+        }
+
+        function changeTheme() {
+            currentTheme = (currentTheme + 1) % themes.length;
+            document.body.style.background = themes[currentTheme].bg;
+            document.body.style.color = themes[currentTheme].text;
+            
+            // Vibration feedback on mobile
+            if (navigator.vibrate) {
+                navigator.vibrate(30);
+            }
+        }
+
+        // Fullscreen toggle for mobile
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(err => {
+                    console.log(`Error attempting to enable fullscreen: ${err.message}`);
+                });
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                }
+            }
+        }
+
+        // Event listeners
+        startBtn.addEventListener('click', startTimer);
+        pauseBtn.addEventListener('click', pauseTimer);
+        resetBtn.addEventListener('click', resetTimer);
+        themeBtn.addEventListener('click', changeTheme);
+        
+        // Double-tap to toggle fullscreen on mobile
+        let lastTap = 0;
+        document.querySelector('.time-display').addEventListener('touchend', function(e) {
+            const currentTime = new Date().getTime();
+            const tapLength = currentTime - lastTap;
+            if (tapLength < 500 && tapLength > 0) {
+                toggleFullscreen();
+                e.preventDefault();
+            }
+            lastTap = currentTime;
+        });
+        
+        // Touch event handlers for better mobile responsiveness
+        document.querySelectorAll('button').forEach(button => {
+            button.addEventListener('touchstart', function() {
+                this.style.transform = 'scale(0.95)';
+            });
+            
+            button.addEventListener('touchend', function() {
+                this.style.transform = 'scale(1)';
+            });
+        });
+
+        // Prevent context menu on long press
+        document.addEventListener('contextmenu', function(e) {
+            e.preventDefault();
+        });
+
+        // Keyboard shortcuts (for devices with keyboards)
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space') {
+                e.preventDefault();
+                if (isRunning) {
+                    pauseTimer();
+                } else {
+                    startTimer();
+                }
+            } else if (e.code === 'KeyR') {
+                resetTimer();
+            } else if (e.code === 'KeyT') {
+                changeTheme();
+            }
+        });
+    </script>
+</body>
+</html>
